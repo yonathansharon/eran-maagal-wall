@@ -31,8 +31,10 @@
     background:#fff;color:var(--ink);padding:7px 12px;border-radius:8px;transition:.12s}
   button:hover,.btn:hover{background:#f3efe6;border-color:#c0b9a8}
   button:active{transform:translateY(1px)}
-  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-  button.primary:hover{background:#843226}
+  button.primary,.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.primary:hover,.btn.primary:hover{background:#843226}
+  label.btn{display:inline-flex;align-items:center;justify-content:center}
+  .vh{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
   button.ghosty{border-style:dashed;background:#fff}
   .toggle{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink);
     padding:6px 10px;border:1px solid var(--line2);border-radius:8px;background:#fff;cursor:pointer;user-select:none}
@@ -107,8 +109,8 @@
 
   <div class="bar">
     <div class="grp">
-      <button class="primary" id="uploadBtn">＋ העלה יצירות</button>
-      <input type="file" id="fileInput" accept="image/*" multiple hidden>
+      <label class="btn primary" id="uploadBtn" for="fileInput">＋ העלה יצירות</label>
+      <input type="file" id="fileInput" accept="image/*" multiple class="vh">
       <button class="ghosty" id="ghostBtn" title="הוספת מקום ריק ליצירה שעדיין לא אותרה">＋ יצירה אבודה</button>
     </div>
     <div class="div"></div>
@@ -311,36 +313,56 @@
   wall.addEventListener('pointerdown',function(e){if(e.target===wall||e.target===grid){select(null)}});
 
   // ---- add pieces ----
-  document.getElementById('uploadBtn').onclick=function(){document.getElementById('fileInput').click()};
+  // File picker opens natively via the <label for="fileInput"> — no JS click (iOS-safe).
+  // Images are shown immediately from the file (object URL); the small stored copy is made in the background.
   document.getElementById('fileInput').onchange=function(e){
-    var files=[].slice.call(e.target.files); var i=0,added=0;
+    var files=[].slice.call(e.target.files||[]);
+    if(!files.length){return;}
+    var added=0;
     files.forEach(function(file){
-      if(!file.type.startsWith('image/'))return;
-      var rd=new FileReader();
-      rd.onload=function(ev){ downscale(ev.target.result,function(src,aspect){
-        var baseW=Math.min(200, wall.clientWidth*0.28);
-        var p={id:uid(),type:'image',src:src,aspect:aspect,
-          w:baseW,h:baseW/aspect,x:30+ (added%5)*36,y:30+Math.floor(added/5)*36,z:++state.z,
-          title:'',story:'',realWidthCm:null};
-        state.pieces.push(p);makeEl(p);updateCount();added++;
-        if(added===1)select(p.id);
-      });};
-      rd.readAsDataURL(file);
+      if(file.type && file.type.indexOf('image/')!==0){return;}
+      addImagePiece(file,function(ok){ if(!ok){toast('לא ניתן להציג את התמונה — נסו JPG או PNG');} });
     });
     e.target.value='';
+
+    function addImagePiece(file,done){
+      var url=null; try{url=URL.createObjectURL(file);}catch(err){}
+      var probe=new Image();
+      probe.onload=function(){ place(url,(probe.naturalWidth/probe.naturalHeight)||1,probe,false,done); };
+      probe.onerror=function(){
+        var rd=new FileReader();
+        rd.onload=function(ev){
+          var im2=new Image();
+          im2.onload=function(){ place(ev.target.result,(im2.naturalWidth/im2.naturalHeight)||1,im2,true,done); };
+          im2.onerror=function(){done(false);};
+          im2.src=ev.target.result;
+        };
+        rd.onerror=function(){done(false);};
+        rd.readAsDataURL(file);
+      };
+      if(url){probe.src=url;} else {probe.onerror();}
+    }
+    function place(displaySrc,aspect,imgEl,isData,done){
+      var baseW=Math.min(200, wall.clientWidth*0.28);
+      var p={id:uid(),type:'image',src:displaySrc,store:isData?displaySrc:null,aspect:aspect,
+        w:baseW,h:baseW/aspect,x:30+(added%5)*36,y:30+Math.floor(added/5)*36,z:++state.z,
+        title:'',story:'',realWidthCm:null};
+      state.pieces.push(p);makeEl(p);updateCount();added++;
+      if(added===1)select(p.id);
+      toast('נוספה יצירה');
+      if(!isData)makeStorable(imgEl,function(dataUrl){p.store=dataUrl;});
+      done(true);
+    }
   };
-  function downscale(dataUrl,cb){
-    var img=new Image();
-    img.onload=function(){
-      var max=1100,w=img.width,h=img.height;
+  function makeStorable(img,cb){
+    try{
+      var max=1100,w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
+      if(!w||!h){return;}
       if(Math.max(w,h)>max){var s=max/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
       var c=document.createElement('canvas');c.width=w;c.height=h;
       c.getContext('2d').drawImage(img,0,0,w,h);
-      var out; try{out=c.toDataURL('image/jpeg',0.82)}catch(err){out=dataUrl}
-      cb(out, img.width/img.height);
-    };
-    img.onerror=function(){cb(dataUrl,1)};
-    img.src=dataUrl;
+      var out=c.toDataURL('image/jpeg',0.82); if(out&&out.length>50){cb(out);}
+    }catch(err){}
   }
   document.getElementById('ghostBtn').onclick=function(){
     var w=Math.min(150,wall.clientWidth*0.2);
@@ -394,7 +416,7 @@
 
   // ---- persistence ----
   function serialize(){return {wall:state.wall,z:state.z,
-    pieces:state.pieces.map(function(p){return {id:p.id,type:p.type,src:p.src,aspect:p.aspect,
+    pieces:state.pieces.map(function(p){return {id:p.id,type:p.type,src:(p.type==='image'?(p.store||(p.src&&p.src.slice(0,5)==='data:'?p.src:'')):p.src),aspect:p.aspect,
       x:p.x,y:p.y,w:p.w,h:p.h,z:p.z,title:p.title,story:p.story,realWidthCm:p.realWidthCm}})}}
   document.getElementById('saveBtn').onclick=async function(){
     var data=JSON.stringify(serialize());
@@ -413,7 +435,7 @@
       if(!val){toast('לא נמצאה פריסה שמורה');return;}
       var d=JSON.parse(val);
       state.wall=d.wall||state.wall;state.z=d.z||1;
-      state.pieces=(d.pieces||[]).map(function(p){return p});
+      state.pieces=(d.pieces||[]).filter(function(p){return p.type!=='image'||p.src;});
       // reflect controls
       colorInp.value=state.wall.color;document.getElementById('wallH').value=state.wall.heightM;
       document.getElementById('tScale').checked=state.wall.scale;
