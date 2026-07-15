@@ -1,0 +1,317 @@
+<!-- מעגל — פרוטוטייפ מיצב אינטראקטיבי | v0.2 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מעגל — פרוטוטייפ המיצב</title>
+<style>
+  :root{--ink:#2b2b28;--muted:#6f6d66;--hint:#9a988f;--line:#e2ddd2;--line2:#cfc9bc;--bg:#f7f5f0;--panel:#fffdf8;--accent:#9a3b2e;}
+  *{box-sizing:border-box}html,body{margin:0}
+  body{direction:rtl;background:var(--bg);color:var(--ink);font-family:"Assistant","Heebo","Segoe UI",system-ui,Arial,sans-serif;font-size:14px;line-height:1.5}
+  .wrap{max-width:1320px;margin:0 auto;padding:14px}
+  header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  header h1{margin:0;font-size:19px;font-weight:600}header .sub{font-size:12.5px;color:var(--muted)}
+  .sp{flex:1}
+  button{font:inherit;font-size:13px;cursor:pointer;border:1px solid var(--line2);background:#fff;color:var(--ink);padding:7px 12px;border-radius:8px;transition:.12s}
+  button:hover{background:#f2eee5}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}button.primary:hover{background:#843226}
+  button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .grid{display:flex;gap:12px;align-items:flex-start}
+  .main{flex:1;min-width:0}.side{width:300px;flex:0 0 300px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+  .card h3{margin:0 0 10px;font-size:14px;font-weight:600}
+  #wall{width:100%;display:block;border-radius:10px;border:1px solid var(--line2)}
+  .wallbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .pill{font-size:12px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:20px;padding:4px 11px}
+  .idx{margin-bottom:11px}.idx .row{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px}.idx .row b{font-weight:600}
+  .bar{height:7px;background:#eae5da;border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .5s}
+  .note{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.45}
+  .phone{background:#1e1d1b;border-radius:20px;padding:10px;border:1px solid #38352f}
+  .pscreen{background:#faf8f3;border-radius:13px;padding:11px}
+  .bank{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px}
+  .fig{width:34px;height:42px;border-radius:7px;border:1px solid var(--line);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+  .fig:hover{border-color:var(--accent)}.fig svg{display:block}
+  #cv{width:100%;background:#fff;border:1px dashed var(--line2);border-radius:9px;display:block;touch-action:none;cursor:grab}
+  label.f{display:block;font-size:11.5px;color:var(--muted);margin:9px 0 4px}
+  input[type=text],select{width:100%;font:inherit;font-size:13px;border:1px solid var(--line2);border-radius:8px;padding:6px 8px;background:#fff}
+  .radios{display:flex;gap:6px}.radios label{flex:1;font-size:11.5px;text-align:center;border:1px solid var(--line2);border-radius:7px;padding:5px 2px;cursor:pointer;background:#fff}
+  .radios input{display:none}.radios label.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .mini{font-size:11px;color:var(--hint);margin-top:6px;text-align:center}
+  .ok{background:#eef5ef;border:1px solid #cfe3d3;color:#2f6b41;border-radius:8px;padding:7px 9px;font-size:12px;margin-top:8px;display:none}
+  .cov{font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between;padding:2px 0}
+  .cov b{color:var(--ink);font-weight:600}.cov.low b{color:var(--accent)}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 4px;font-size:11px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:4px}
+  .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+  .row2{display:flex;gap:8px;align-items:center}
+  @media(max-width:900px){.grid{flex-direction:column}.side{width:100%;flex:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>מעגל</h1><span class="sub">פרוטוטייפ המיצב · הקיר המצטבר</span>
+    <span class="sp"></span>
+    <button id="simBtn">בדיקה: 150 מבקרים אקראיים</button>
+    <button id="breathBtn" class="primary">נשימה — התהוות עכשיו</button>
+    <button id="resetBtn">איפוס</button>
+  </header>
+  <div class="grid">
+    <div class="main">
+      <div class="card">
+        <div class="wallbar">
+          <button id="vPortrait" class="on">תצוגה: דיוקן</button>
+          <button id="vMap">תצוגה: מפת ישראל</button>
+          <span class="sp"></span>
+          <span class="pill" id="fillPill">0 / 0</span>
+          <span class="pill" id="queuePill">0 ממתינים</span>
+        </div>
+        <canvas id="wall"></canvas>
+        <div class="note" id="wallNote">הקיר מתחיל ריק. כל מבקר ממלא אריח אחד. ככל שהוא מתמלא — הדיוקן מתגבש.</div>
+      </div>
+    </div>
+    <div class="side">
+      <div class="card">
+        <h3>הטלפון — הרכיבו את היצירה</h3>
+        <div class="phone"><div class="pscreen">
+          <div class="bank" id="bank"></div>
+          <canvas id="cv" height="150"></canvas>
+          <div class="mini" id="compHint">בחרו דמות מהבנק · גררו לסידור · הקישו כדי לשנות מצב</div>
+          <div class="legend" id="legend"></div>
+          <label class="f">מילה אחת — מה אתם נושאים איתכם?</label>
+          <input type="text" id="word" maxlength="14" placeholder="למשל: תקווה">
+          <label class="f">אזור מגורים</label>
+          <select id="region"></select>
+          <label class="f">הקדשה</label>
+          <div class="radios" id="ded">
+            <label class="sel"><input type="radio" name="d" value="none" checked>ללא</label>
+            <label><input type="radio" name="d" value="private">פרטית</label>
+            <label><input type="radio" name="d" value="public">גלויה</label>
+          </div>
+          <div class="row2" style="margin-top:10px">
+            <button class="primary" id="submitBtn" style="flex:1">חתמו ושלחו</button>
+            <button id="clearComp">נקה</button>
+          </div>
+          <div class="ok" id="okMsg"></div>
+        </div></div>
+      </div>
+      <div class="card">
+        <h3>המדדים המצטברים</h3>
+        <div class="idx">
+          <div class="row"><span>מדד הנוכחות</span><b id="vPres">—</b></div>
+          <div class="bar"><i id="bPres" style="width:0%"></i></div>
+          <div class="note">גבוה = מלא חיים, קיר בהיר. נמוך = אבל, קיר קודר.</div>
+        </div>
+        <div class="idx">
+          <div class="row"><span>מדד הקרבה</span><b id="vProx">—</b></div>
+          <div class="bar"><i id="bProx" style="width:0%"></i></div>
+          <div class="note">גבוה = האריחים נדחסים ונוגעים. נמוך = נפערים רווחים.</div>
+        </div>
+        <div class="idx">
+          <div class="row"><span>פריסה גאוגרפית</span><b id="vCov">—</b></div>
+          <div id="covList"></div>
+          <div class="note">אזור דליל = חור במפה. לשם ער"ן לוקחת גרסה ניידת.</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>נהר המילים</h3>
+        <div id="words" style="font-size:12.5px;color:var(--muted);line-height:1.9">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var COLORS=['#E4322B','#F5A623','#1E88E5','#43A047','#E91E63','#00ACC1','#8E24AA','#FB8C00'];
+var STATES=['present','silhouette','fading','blackened','light'];
+var ST_LABEL={present:'נוכח',silhouette:'צללית',fading:'דוהה',blackened:'מושחר',light:'אור'};
+var ST_WEIGHT={present:1,light:0.8,fading:0.5,silhouette:0.28,blackened:0};   // presence
+var ST_LUM={present:0.72,light:0.92,fading:0.5,silhouette:0.34,blackened:0.07}; // for mosaic
+var REGIONS=['צפון','חיפה','תל אביב','מרכז','ירושלים','שפלה','דרום'];
+
+var tiles=[], queue=[], view='portrait', anim=null;
+var COLS=46, ROWS=30, TOTAL=COLS*ROWS;
+
+// ---- figure drawing (state-aware) ----
+function figBody(ctx,cx,cy,s){
+  ctx.beginPath(); ctx.arc(cx, cy-s*0.55, s*0.34, 0, Math.PI*2);
+  ctx.moveTo(cx-s*0.42, cy+s*0.62);
+  ctx.arc(cx, cy-s*0.55, s*0.34, 0, Math.PI*2);
+}
+function pathFigure(ctx,cx,cy,s){
+  ctx.beginPath();
+  ctx.arc(cx, cy-s*0.55, s*0.34, 0, Math.PI*2);
+  ctx.closePath();
+  ctx.moveTo(cx-s*0.42, cy+s*0.62);
+  ctx.quadraticCurveTo(cx-s*0.40, cy-s*0.16, cx, cy-s*0.16);
+  ctx.quadraticCurveTo(cx+s*0.40, cy-s*0.16, cx+s*0.42, cy+s*0.62);
+  ctx.closePath();
+}
+function drawFigure(ctx,f,cx,cy,s){
+  var base=COLORS[f.c%COLORS.length];
+  ctx.save();
+  if(f.state==='present'){ ctx.fillStyle=base; pathFigure(ctx,cx,cy,s); ctx.fill(); }
+  else if(f.state==='fading'){ ctx.globalAlpha=0.32; ctx.fillStyle=base; pathFigure(ctx,cx,cy,s); ctx.fill(); }
+  else if(f.state==='blackened'){ ctx.fillStyle='#1e1d1b'; pathFigure(ctx,cx,cy,s); ctx.fill(); }
+  else if(f.state==='silhouette'){ ctx.lineWidth=Math.max(1,s*0.11); ctx.strokeStyle='#8f8a7e'; pathFigure(ctx,cx,cy,s); ctx.stroke(); }
+  else if(f.state==='light'){ ctx.shadowColor='rgba(245,225,170,0.9)'; ctx.shadowBlur=s*0.7; ctx.lineWidth=Math.max(1,s*0.13); ctx.strokeStyle='#f2e0b4'; pathFigure(ctx,cx,cy,s); ctx.stroke(); ctx.shadowBlur=0; ctx.strokeStyle='#fbf3da'; ctx.lineWidth=Math.max(0.5,s*0.05); pathFigure(ctx,cx,cy,s); ctx.stroke(); }
+  ctx.restore();
+}
+function figSVG(f){
+  var col=COLORS[f.c%COLORS.length];
+  return '<svg width="22" height="30" viewBox="0 0 22 30"><circle cx="11" cy="8" r="6" fill="'+col+'"/><path d="M3 29 Q3.5 15 11 15 Q18.5 15 19 29 Z" fill="'+col+'"/></svg>';
+}
+
+// ---- metrics ----
+function tileLum(t){ if(!t.figures.length) return 0.5; var l=0; t.figures.forEach(function(f){l+=ST_LUM[f.state];}); return l/t.figures.length; }
+function computeMetrics(figs){
+  var n=figs.length; if(!n) return {presence:0.5,proximity:0.5};
+  var pr=0; figs.forEach(function(f){pr+=ST_WEIGHT[f.state];}); pr/=n;
+  var prox=0.5;
+  if(n>1){ var sum=0,cnt=0; for(var i=0;i<n;i++)for(var j=i+1;j<n;j++){var dx=figs[i].x-figs[j].x,dy=figs[i].y-figs[j].y;sum+=Math.sqrt(dx*dx+dy*dy);cnt++;} var mean=sum/cnt; prox=Math.max(0,Math.min(1,1-mean/0.6)); }
+  return {presence:pr,proximity:prox};
+}
+
+// ---- target portrait ----
+var targetLum=null;
+function buildTarget(){
+  var oc=document.createElement('canvas');oc.width=COLS;oc.height=ROWS;var g=oc.getContext('2d');
+  g.fillStyle='#101010';g.fillRect(0,0,COLS,ROWS);
+  var heads=[[23,9,7.6,238],[13,11,5.8,208],[33,11,5.8,208],[7,14,4.8,178],[39,14,4.8,178],[17,16,5,192],[29,16,5,192],[23,19,4.4,168],[11,20,4,152],[35,20,4,152],[4,19,3.6,132],[42,19,3.6,132],[23,5,4.6,218],[16,6,3.6,188],[30,6,3.6,188],[9,25,3.4,122],[37,25,3.4,122],[23,26,3.6,138],[18,24,3.2,128],[28,24,3.2,128]];
+  heads.forEach(function(h){var x=h[0],y=h[1],r=h[2],v=h[3];g.fillStyle='rgb('+v+','+v+','+v+')';g.beginPath();g.arc(x,y-r*0.55,r*0.42,0,Math.PI*2);g.fill();g.beginPath();g.moveTo(x-r*0.72,y+r*0.95);g.quadraticCurveTo(x-r*0.66,y-r*0.05,x,y-r*0.05);g.quadraticCurveTo(x+r*0.66,y-r*0.05,x+r*0.72,y+r*0.95);g.closePath();g.fill();});
+  var d=g.getImageData(0,0,COLS,ROWS).data;targetLum=new Float32Array(TOTAL);
+  for(var i=0;i<TOTAL;i++)targetLum[i]=d[i*4]/255;
+}
+buildTarget();
+
+var cellOrder=[];
+(function(){for(var i=0;i<TOTAL;i++)cellOrder.push(i);var s=12345;function rnd(){s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff;}for(var k=cellOrder.length-1;k>0;k--){var j=Math.floor(rnd()*(k+1));var t=cellOrder[k];cellOrder[k]=cellOrder[j];cellOrder[j]=t;}})();
+
+// ---- Israel map ----
+var ISRAEL=[[0.52,0.03],[0.50,0.07],[0.455,0.115],[0.462,0.17],[0.452,0.24],[0.447,0.32],[0.452,0.40],[0.462,0.48],[0.472,0.56],[0.484,0.63],[0.489,0.72],[0.487,0.82],[0.492,0.90],[0.497,0.985],[0.508,0.90],[0.523,0.80],[0.552,0.68],[0.586,0.57],[0.601,0.49],[0.585,0.43],[0.602,0.37],[0.606,0.29],[0.598,0.21],[0.582,0.14],[0.566,0.085],[0.545,0.05]];
+function inIsrael(px,py){var c=false;for(var i=0,j=ISRAEL.length-1;i<ISRAEL.length;j=i++){var xi=ISRAEL[i][0],yi=ISRAEL[i][1],xj=ISRAEL[j][0],yj=ISRAEL[j][1];if(((yi>py)!==(yj>py))&&(px<(xj-xi)*(py-yi)/(yj-yi)+xi))c=!c;}return c;}
+var mapCells=null;
+function buildMapCells(){
+  mapCells={};REGIONS.forEach(function(r){mapCells[r]=[];});
+  for(var cy=0;cy<ROWS;cy++)for(var cx=0;cx<COLS;cx++){
+    var px=(cx+0.5)/COLS,py=(cy+0.5)/ROWS;if(!inIsrael(px,py))continue;
+    var r;
+    if(py<0.13)r='צפון';else if(py<0.22)r='חיפה';
+    else if(py<0.36)r=(px<0.52?'תל אביב':'ירושלים');
+    else if(py<0.48)r=(px<0.52?'מרכז':'ירושלים');
+    else if(py<0.60)r='שפלה';else r='דרום';
+    mapCells[r].push(cy*COLS+cx);
+  }
+}
+buildMapCells();
+
+var agg={presence:0.5,prox:0.5,cov:{}};
+function recompute(){if(!tiles.length){agg={presence:0.5,prox:0.5,cov:{}};return;}var s=0,p=0;agg.cov={};REGIONS.forEach(function(r){agg.cov[r]=0;});tiles.forEach(function(t){s+=t.presence;p+=t.proximity;agg.cov[t.region]=(agg.cov[t.region]||0)+1;});agg.presence=s/tiles.length;agg.prox=p/tiles.length;}
+
+function layoutPortrait(){var n=tiles.length;if(!n)return;var active=cellOrder.slice(0,n);active.sort(function(a,b){return targetLum[a]-targetLum[b];});var order=tiles.map(function(t,i){return{i:i,l:tileLum(t)};});order.sort(function(a,b){return a.l-b.l;});for(var k=0;k<n;k++){tiles[order[k].i].cell=active[k];}}
+function layoutMap(){var free={};REGIONS.forEach(function(r){free[r]=mapCells[r].slice();});var of=[];tiles.forEach(function(t){var pool=free[t.region];if(pool&&pool.length){t.cell=pool.splice(Math.floor(pool.length/2),1)[0];}else of.push(t);});of.forEach(function(t){for(var i=0;i<REGIONS.length;i++){var p=free[REGIONS[i]];if(p.length){t.cell=p.pop();return;}}t.cell=-1;});}
+function relayout(){if(view==='portrait')layoutPortrait();else layoutMap();}
+
+var wall=document.getElementById('wall'),wctx=wall.getContext('2d');
+function sizeWall(){var w=wall.clientWidth||900,h=Math.round(w*ROWS/COLS);var dpr=Math.min(devicePixelRatio||1,2);wall.width=w*dpr;wall.height=h*dpr;wall.style.height=h+'px';wctx.setTransform(dpr,0,0,dpr,0,0);return{w:w,h:h};}
+function lerp(a,b,t){return a+(b-a)*t;}
+function ambient(){
+  var pr=tiles.length?agg.presence:0.6;
+  var lo=[26,25,23], hi=[248,246,241];               // dark(mourning) -> light(life)
+  var bg='rgb('+Math.round(lerp(lo[0],hi[0],pr))+','+Math.round(lerp(lo[1],hi[1],pr))+','+Math.round(lerp(lo[2],hi[2],pr))+')';
+  var gap=lerp(0.34,0.02,tiles.length?agg.prox:0.4);  // low prox far, high prox touching
+  return {bg:bg,gap:gap,dark:pr<0.45};
+}
+function draw(t01){
+  var d=sizeWall(),cw=d.w/COLS,ch=d.h/ROWS,A=ambient();
+  wctx.fillStyle=A.bg;wctx.fillRect(0,0,d.w,d.h);
+  var used={};tiles.forEach(function(t){if(t.cell>=0)used[t.cell]=1;});
+  // country outline in map view
+  if(view==='map'){
+    wctx.beginPath();
+    ISRAEL.forEach(function(pt,i){var x=pt[0]*d.w,y=pt[1]*d.h;if(i===0)wctx.moveTo(x,y);else wctx.lineTo(x,y);});
+    wctx.closePath();
+    wctx.fillStyle=A.dark?'rgba(255,255,255,.04)':'rgba(0,0,0,.03)';wctx.fill();
+    wctx.strokeStyle=A.dark?'rgba(255,255,255,.25)':'rgba(0,0,0,.32)';wctx.lineWidth=1.5;wctx.stroke();
+  }
+  // empty slots
+  wctx.strokeStyle=A.dark?'rgba(255,255,255,.08)':'rgba(0,0,0,.05)';wctx.lineWidth=1;
+  for(var i=0;i<TOTAL;i++){
+    if(used[i])continue;
+    if(view==='map'){var inC=false;for(var r=0;r<REGIONS.length;r++){if(mapCells[REGIONS[r]].indexOf(i)>=0){inC=true;break;}}if(!inC)continue;}
+    var x=(i%COLS)*cw,y=Math.floor(i/COLS)*ch;wctx.strokeRect(x+cw*0.2,y+ch*0.2,cw*0.6,ch*0.6);
+  }
+  // tiles
+  tiles.forEach(function(t){
+    if(t.cell<0)return;
+    var tx=(t.cell%COLS),ty=Math.floor(t.cell/COLS),px=tx,py=ty;
+    if(t01!=null&&t.prevCell!=null&&t.prevCell>=0){var ox=(t.prevCell%COLS),oy=Math.floor(t.prevCell/COLS);px=ox+(tx-ox)*t01;py=oy+(ty-oy)*t01;}
+    var x=px*cw,y=py*ch,pad=A.gap,iw=cw*(1-pad*2),ih=ch*(1-pad*2),ix=x+cw*pad,iy=y+ch*pad;
+    wctx.fillStyle=A.dark?'rgba(255,255,255,.05)':'rgba(255,255,255,.5)';wctx.fillRect(ix,iy,iw,ih);
+    var s=Math.min(iw,ih)*0.52;
+    t.figures.forEach(function(f){drawFigure(wctx,f,ix+f.x*iw,iy+f.y*ih,s);});
+  });
+}
+function animate(){if(anim)cancelAnimationFrame(anim);var t0=performance.now(),dur=1400;(function step(now){var p=Math.min(1,(now-t0)/dur),e=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;draw(e);if(p<1)anim=requestAnimationFrame(step);else{anim=null;tiles.forEach(function(t){t.prevCell=null;});draw(null);}})(t0);}
+function breathe(){if(!queue.length&&!tiles.length)return;tiles.forEach(function(t){t.prevCell=(t.cell==null?-1:t.cell);});queue.forEach(function(t){t.prevCell=-1;tiles.push(t);});queue=[];recompute();relayout();animate();updateUI();}
+
+// ---- phone composer ----
+var cv=document.getElementById('cv'),cctx=cv.getContext('2d'),myFigs=[];
+function sizeCv(){var w=cv.clientWidth||240;var dpr=Math.min(devicePixelRatio||1,2);cv.width=w*dpr;cv.height=150*dpr;cctx.setTransform(dpr,0,0,dpr,0,0);return{w:w,h:150};}
+function drawCv(){var d=sizeCv();cctx.clearRect(0,0,d.w,d.h);myFigs.forEach(function(f){drawFigure(cctx,f,f.x*d.w,f.y*d.h,26);});var m=computeMetrics(myFigs);document.getElementById('compHint').textContent=myFigs.length?(myFigs.length+' דמויות · נוכחות '+Math.round(m.presence*100)+'% · קרבה '+Math.round(m.proximity*100)+'%'):'בחרו דמות מהבנק · גררו לסידור · הקישו כדי לשנות מצב';}
+var bank=document.getElementById('bank');
+COLORS.forEach(function(col,i){var b=document.createElement('button');b.className='fig';b.innerHTML=figSVG({c:i});b.onclick=function(){if(myFigs.length>=6)return;myFigs.push({c:i,state:'present',x:0.5,y:0.5});drawCv();};bank.appendChild(b);});
+// legend
+(function(){var L=document.getElementById('legend');STATES.forEach(function(st){var col={present:'#E4322B',silhouette:'#8f8a7e',fading:'#E4322B',blackened:'#1e1d1b',light:'#f2e0b4'}[st];var o=(st==='fading')?'opacity:.35':'';var s=document.createElement('span');s.innerHTML='<i style="background:'+col+';'+o+(st==='silhouette'?';background:#fff;border:2px solid #8f8a7e':'')+(st==='light'?';box-shadow:0 0 5px #f2e0b4':'')+'"></i>'+ST_LABEL[st];L.appendChild(s);});})();
+
+var cvActive=-1,cvDown=null,cvMoved=false;
+function cvPos(e){var r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};}
+cv.addEventListener('pointerdown',function(e){var p=cvPos(e),best=-1,bd=1e9;myFigs.forEach(function(f,i){var d=Math.hypot(f.x-p.x,f.y-p.y);if(d<bd){bd=d;best=i;}});if(best>=0&&bd<0.18){cvActive=best;cvDown=p;cvMoved=false;cv.setPointerCapture(e.pointerId);}});
+cv.addEventListener('pointermove',function(e){if(cvActive<0)return;var p=cvPos(e);if(Math.hypot(p.x-cvDown.x,p.y-cvDown.y)>0.03)cvMoved=true;if(cvMoved){myFigs[cvActive].x=Math.max(0.08,Math.min(0.92,p.x));myFigs[cvActive].y=Math.max(0.12,Math.min(0.88,p.y));drawCv();}});
+cv.addEventListener('pointerup',function(){if(cvActive>=0&&!cvMoved){var f=myFigs[cvActive];f.state=STATES[(STATES.indexOf(f.state)+1)%STATES.length];drawCv();}cvActive=-1;});
+cv.addEventListener('dblclick',function(e){var p=cvPos(e);for(var i=myFigs.length-1;i>=0;i--){if(Math.hypot(myFigs[i].x-p.x,myFigs[i].y-p.y)<0.14){myFigs.splice(i,1);break;}}drawCv();});
+document.getElementById('clearComp').onclick=function(){myFigs=[];drawCv();};
+
+var regionSel=document.getElementById('region');REGIONS.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;regionSel.appendChild(o);});regionSel.value='מרכז';
+document.querySelectorAll('#ded label').forEach(function(l){l.onclick=function(){document.querySelectorAll('#ded label').forEach(function(x){x.classList.remove('sel');});l.classList.add('sel');};});
+
+document.getElementById('submitBtn').onclick=function(){
+  if(!myFigs.length)return;var m=computeMetrics(myFigs);
+  var t={figures:myFigs.map(function(f){return{c:f.c,state:f.state,x:f.x,y:f.y};}),presence:m.presence,proximity:m.proximity,region:regionSel.value,word:(document.getElementById('word').value||'').trim(),dedication:(document.querySelector('#ded input:checked')||{}).value||'none',cell:null,prevCell:null};
+  queue.push(t);var ok=document.getElementById('okMsg');ok.style.display='block';ok.textContent='נשלח ✓ האריח שלך ממתין לנשימה הבאה · אזור: '+t.region;
+  myFigs=[];document.getElementById('word').value='';drawCv();updateUI();
+};
+
+function synth(){
+  var n=1+Math.floor(Math.random()*4),figs=[],presBias=Math.random(),cx=0.3+Math.random()*0.4,cy=0.3+Math.random()*0.4,spread=0.05+Math.random()*0.35;
+  for(var i=0;i<n;i++){var r=Math.random(),st;if(r<0.42+presBias*0.3)st='present';else if(r<0.6)st='fading';else if(r<0.75)st='silhouette';else if(r<0.9)st='blackened';else st='light';figs.push({c:Math.floor(Math.random()*8),state:st,x:Math.max(0.1,Math.min(0.9,cx+(Math.random()-0.5)*spread*2)),y:Math.max(0.15,Math.min(0.85,cy+(Math.random()-0.5)*spread*2))});}
+  var m=computeMetrics(figs);var w=['תקווה','יחד','בית','געגוע','אור','שקט','כוח','זיכרון','אחדות','נשימה','חברים','משפחה'];
+  var rw=[0.15,0.10,0.24,0.14,0.11,0.10,0.16],rr=Math.random(),acc=0,reg=REGIONS[3];for(var k=0;k<REGIONS.length;k++){acc+=rw[k];if(rr<=acc){reg=REGIONS[k];break;}}
+  return{figures:figs,presence:m.presence,proximity:m.proximity,region:reg,word:w[Math.floor(Math.random()*w.length)],dedication:'none',cell:null,prevCell:null};
+}
+document.getElementById('simBtn').onclick=function(){for(var i=0;i<150;i++)queue.push(synth());updateUI();};
+document.getElementById('breathBtn').onclick=breathe;
+document.getElementById('resetBtn').onclick=function(){tiles=[];queue=[];recompute();draw(null);updateUI();};
+
+function setView(v){view=v;document.getElementById('vPortrait').classList.toggle('on',v==='portrait');document.getElementById('vMap').classList.toggle('on',v==='map');document.getElementById('wallNote').textContent=v==='portrait'?'הקיר מתחיל ריק. כל מבקר ממלא אריח אחד. ככל שהוא מתמלא — הדיוקן מתגבש.':'אותם אריחים, מסודרים לפי אזור המגורים. אזור דליל נראה כחור במפה — לשם צריך להגיע.';tiles.forEach(function(t){t.prevCell=t.cell;});relayout();animate();}
+document.getElementById('vPortrait').onclick=function(){setView('portrait');};
+document.getElementById('vMap').onclick=function(){setView('map');};
+
+function updateUI(){
+  document.getElementById('fillPill').textContent=tiles.length+' / '+TOTAL;
+  document.getElementById('queuePill').textContent=queue.length+' ממתינים';
+  document.getElementById('vPres').textContent=tiles.length?Math.round(agg.presence*100)+'%':'—';
+  document.getElementById('bPres').style.width=(agg.presence*100)+'%';
+  document.getElementById('vProx').textContent=tiles.length?Math.round(agg.prox*100)+'%':'—';
+  document.getElementById('bProx').style.width=(agg.prox*100)+'%';
+  var covered=REGIONS.filter(function(r){return(agg.cov[r]||0)>0;}).length;
+  document.getElementById('vCov').textContent=tiles.length?covered+'/'+REGIONS.length+' אזורים':'—';
+  var cl=document.getElementById('covList');cl.innerHTML='';var max=1;REGIONS.forEach(function(r){max=Math.max(max,agg.cov[r]||0);});
+  REGIONS.forEach(function(r){var n=agg.cov[r]||0,low=tiles.length>20&&n<max*0.18;var dv=document.createElement('div');dv.className='cov'+(low?' low':'');dv.innerHTML='<span>'+r+(low?' — דליל':'')+'</span><b>'+n+'</b>';cl.appendChild(dv);});
+  var counts={};tiles.forEach(function(t){if(t.word)counts[t.word]=(counts[t.word]||0)+1;});
+  var arr=Object.keys(counts).map(function(k){return[k,counts[k]];}).sort(function(a,b){return b[1]-a[1];}).slice(0,10);
+  document.getElementById('words').innerHTML=arr.length?arr.map(function(p){var sz=12+Math.min(11,p[1]);return '<span style="font-size:'+sz+'px;margin-left:8px">'+p[0]+'</span>';}).join(''):'—';
+}
+window.addEventListener('resize',function(){draw(null);drawCv();});
+drawCv();recompute();draw(null);updateUI();
+})();
+</script>
